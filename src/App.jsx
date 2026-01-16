@@ -11,6 +11,12 @@ import AdminPayment from './pages/admin/AdminPayment/AdminPayment';
 import AdminReports from './pages/admin/AdminReports/AdminReports';
 import AdminSetting from './pages/admin/AdminSetting/AdminSetting';
 import AdminProfile from './pages/admin/AdminProfile/AdminProfile';
+import StaffDashboard from './pages/staff/Staff Dashboard/StaffDashboard';
+import StaffBooking from './pages/staff/Staff Booking/StaffBooking';
+import StaffNewBooking from './pages/staff/Staff New Booking/StaffNewBooking';
+import StaffRecurringBooking from './pages/staff/Staff Recurring Booking/StaffRecurringBooking';
+import StaffPayment from './pages/staff/Staff Payment/StaffPayment';
+import StaffCheckBooking from './pages/staff/Staff Check Booking/StaffCheckBooking';
 import Sidebar from './components/Layout/Sidebar';
 import AppNavbar from './components/Layout/Navbar';
 
@@ -106,12 +112,12 @@ function App() {
         {/* Management Routes */}
         <Route path="/management" element={<DashboardLayout role="management" />}>
           <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="booking-calendar" element={<Placeholder />} />
-          <Route path="new-booking" element={<Placeholder />} />
-          <Route path="recurring-bookings" element={<Placeholder />} />
-          <Route path="payments" element={<Placeholder />} />
-          <Route path="bookings" element={<Placeholder />} />
+          <Route path="dashboard" element={<StaffDashboard />} />
+          <Route path="booking-calendar" element={<StaffBooking />} />
+          <Route path="new-booking" element={<StaffNewBooking />} />
+          <Route path="recurring-bookings" element={<StaffRecurringBooking />} />
+          <Route path="payments" element={<StaffPayment />} />
+          <Route path="bookings" element={<StaffCheckBooking />} />
           <Route path="profile" element={<AdminProfile />} />
         </Route>
 

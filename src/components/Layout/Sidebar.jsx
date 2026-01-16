@@ -32,9 +32,9 @@ const Sidebar = ({ role, isOpen, toggleSidebar }) => {
             { label: 'Dashboard', path: '/management/dashboard', icon: <FaTachometerAlt /> },
             { label: 'Booking Calendar', path: '/management/booking-calendar', icon: <FaCalendarAlt /> },
             { label: 'New Booking', path: '/management/new-booking', icon: <FaPlusCircle /> },
+                        { label: 'Bookings', path: '/management/bookings', icon: <FaListAlt /> },
             { label: 'Recurring Bookings', path: '/management/recurring-bookings', icon: <FaClock /> },
             { label: 'Payments', path: '/management/payments', icon: <FaMoneyBillWave /> },
-            { label: 'Bookings', path: '/management/bookings', icon: <FaListAlt /> },
         ]
     };
 
