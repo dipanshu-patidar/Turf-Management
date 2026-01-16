@@ -97,7 +97,7 @@ const ManagementUsers = () => {
 
             {/* Table */}
             <div className="mu-table-container">
-                <Table responsive hover className="mu-table">
+                <Table hover className="mu-table">
                     <thead>
                         <tr>
                             <th>Staff Name</th>

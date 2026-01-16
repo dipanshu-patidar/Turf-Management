@@ -3,7 +3,7 @@ import { Navbar, Container, Button, Nav, Dropdown } from 'react-bootstrap';
 import { FaBars, FaSignOutAlt, FaUserCircle, FaBell, FaSearch } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-const AppNavbar = ({ toggleSidebar, isOpen }) => {
+const AppNavbar = ({ toggleSidebar, isOpen, role }) => {
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -57,7 +57,7 @@ const AppNavbar = ({ toggleSidebar, isOpen }) => {
 
                         <Dropdown.Menu className="shadow-lg border-0 rounded-4 mt-2 p-2" style={{ minWidth: '200px' }}>
                             <Dropdown.Header className="text-uppercase small fw-bold text-muted">Account</Dropdown.Header>
-                            <Dropdown.Item onClick={() => navigate('/admin/profile')} className="rounded-2 py-2 mb-1">
+                            <Dropdown.Item onClick={() => navigate(`/${role}/profile`)} className="rounded-2 py-2 mb-1">
                                 <FaUserCircle className="me-2" style={{ color: '#E63946' }} /> Profile
                             </Dropdown.Item>
                             {/* <Dropdown.Item href="#" className="rounded-2 py-2 mb-1"><FaBell className="me-2 text-warning" /> Notifications</Dropdown.Item> */}

@@ -216,7 +216,7 @@ const AdminRecurring = () => {
 
             {/* Table */}
             <div className="adminrecurring-table-container">
-                <Table responsive hover className="adminrecurring-table">
+                <Table hover className="adminrecurring-table">
                     <thead>
                         <tr>
                             <th>Customer Name</th>

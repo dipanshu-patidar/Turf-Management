@@ -143,3 +143,9 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #a0aec0;
 }
+
+.btn-check:checked+.btn, .btn.active, .btn.show, .btn:first-child:active, :not(.btn-check)+.btn:active{
+    color: #fff;
+    background: #212529;
+    border-color: #212529;
+}

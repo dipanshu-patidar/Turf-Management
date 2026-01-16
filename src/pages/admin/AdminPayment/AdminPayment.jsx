@@ -182,9 +182,9 @@ const AdminPayment = () => {
 
     const getPaymentStatusBadge = (status, balance) => {
         if (status === 'Paid' || balance === 0) {
-            return <span className="adminpayment-badge adminpayment-badge-paid">Fully Paid</span>;
+            return <div className="adminpayment-status-badge adminpayment-status-paid">Fully Paid</div>;
         } else {
-            return <span className="adminpayment-badge adminpayment-badge-pending">Balance Pending</span>;
+            return <div className="adminpayment-status-badge adminpayment-status-pending">Balance Pending</div>;
         }
     };
 
@@ -242,7 +242,7 @@ const AdminPayment = () => {
 
             {/* Table */}
             <div className="adminpayment-table-container">
-                <Table responsive hover className="adminpayment-table">
+                <Table hover className="adminpayment-table">
                     <thead>
                         <tr>
                             <th>Booking Ref</th>
@@ -267,25 +267,27 @@ const AdminPayment = () => {
                                     <div className="fw-bold">{payment.customerName}</div>
                                 </td>
                                 <td>
-                                    <Badge bg="light" text="dark" className="border">
+                                    <Badge bg="light" text="dark" className="border fw-normal px-2 py-1">
                                         {payment.court}
                                     </Badge>
                                 </td>
                                 <td>
-                                    <div>{new Date(payment.bookingDate).toLocaleDateString('en-IN')}</div>
+                                    <div className="text-nowrap">{new Date(payment.bookingDate).toLocaleDateString('en-IN')}</div>
                                     <div className="text-muted small">{payment.bookingTime}</div>
                                 </td>
                                 <td>
-                                    <span className="adminpayment-amount total">₹ {payment.totalAmount}</span>
+                                    <span className="adminpayment-amount total text-nowrap">₹ {payment.totalAmount}</span>
                                 </td>
                                 <td>
-                                    <span className="adminpayment-amount advance">₹ {payment.advancePaid}</span>
+                                    <span className="adminpayment-amount advance text-nowrap">₹ {payment.advancePaid}</span>
                                 </td>
                                 <td>
-                                    <span className="adminpayment-amount balance">₹ {payment.balancePending}</span>
+                                    <span className="adminpayment-amount balance text-nowrap">₹ {payment.balancePending}</span>
                                 </td>
                                 <td>
-                                    <span className="adminpayment-mode-badge">{payment.paymentMode}</span>
+                                    <span className={`adminpayment-mode-badge adminpayment-mode-${payment.paymentMode.toLowerCase()}`}>
+                                        {payment.paymentMode}
+                                    </span>
                                 </td>
                                 <td>
                                     {getPaymentStatusBadge(payment.paymentStatus, payment.balancePending)}
@@ -469,7 +471,9 @@ const AdminPayment = () => {
                     <div className="mb-3">
                         <strong>Payment Mode:</strong>
                         <div className="mt-1">
-                            <span className="adminpayment-mode-badge">{selectedPayment?.paymentMode}</span>
+                            <span className={`adminpayment-mode-badge adminpayment-mode-${selectedPayment?.paymentMode?.toLowerCase()}`}>
+                                {selectedPayment?.paymentMode}
+                            </span>
                         </div>
                     </div>
                     <div className="mb-3">

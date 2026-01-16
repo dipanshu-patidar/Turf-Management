@@ -64,15 +64,18 @@
 /* Table Styles */
 .adminpayment-table-container {
     background: #fff;
-    border-radius: 10px;
+    border-radius: 12px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-    overflow: hidden;
+    overflow-x: auto;
     border: 1px solid #f1f3f5;
+    margin-bottom: 1.5rem;
 }
 
 .adminpayment-table {
     margin-bottom: 0;
     width: 100%;
+    min-width: 1200px;
+    /* Ensures horizontal scroll triggers on smaller screens */
 }
 
 .adminpayment-table thead th {
@@ -127,39 +130,64 @@
 }
 
 /* Status Badges */
-.adminpayment-badge {
-    padding: 0.4em 0.8em;
-    border-radius: 20px;
+.adminpayment-status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     display: inline-block;
+    letter-spacing: 0.5px;
+    min-width: 120px;
+    text-align: center;
 }
 
-.adminpayment-badge-paid {
+.adminpayment-status-paid {
     background-color: #d1e7dd;
     color: #0f5132;
 }
 
-.adminpayment-badge-pending {
+.adminpayment-status-pending {
     background-color: #fff3cd;
     color: #856404;
 }
 
-.adminpayment-badge-partial {
-    background-color: #cfe2ff;
-    color: #084298;
-}
-
 /* Payment Mode Badge */
 .adminpayment-mode-badge {
-    padding: 0.3em 0.6em;
-    border-radius: 12px;
-    font-size: 0.7rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
     font-weight: 600;
     background-color: #e7f3ff;
     color: #0056b3;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #cfe2ff;
+}
+
+.adminpayment-mode-upi {
+    background-color: #e7f3ff;
+    color: #0056b3;
+    border-color: #cfe2ff;
+}
+
+.adminpayment-mode-cash {
+    background-color: #e1f5fe;
+    color: #01579b;
+    border-color: #b3e5fc;
+}
+
+.adminpayment-mode-card {
+    background-color: #ede7f6;
+    color: #4527a0;
+    border-color: #d1c4e9;
+}
+
+.adminpayment-mode-online {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+    border-color: #e1bee7;
 }
 
 /* Action Buttons */
@@ -292,10 +320,6 @@
 }
 
 @media (max-width: 768px) {
-    .adminpayment-table-container {
-        overflow-x: auto;
-    }
-
     .adminpayment-page-header {
         flex-direction: column;
         align-items: flex-start;

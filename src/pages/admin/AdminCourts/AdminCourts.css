@@ -44,13 +44,15 @@
     background: #fff;
     border-radius: 10px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-    overflow: hidden;
+    overflow-x: auto;
     border: 1px solid #f1f3f5;
+    margin-bottom: 1.5rem;
 }
 
 .admincourts-table {
     margin-bottom: 0;
     width: 100%;
+    min-width: 800px;
 }
 
 .admincourts-table thead th {
@@ -62,6 +64,7 @@
     letter-spacing: 0.5px;
     padding: 1rem;
     border-bottom: 2px solid #e9ecef;
+    white-space: nowrap;
 }
 
 .admincourts-table tbody td {

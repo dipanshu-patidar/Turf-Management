@@ -113,7 +113,7 @@ const AdminCourts = () => {
 
             {/* Table */}
             <div className="admincourts-table-container">
-                <Table responsive hover className="admincourts-table">
+                <Table hover className="admincourts-table">
                     <thead>
                         <tr>
                             <th>Court Name</th>

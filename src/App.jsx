@@ -46,7 +46,7 @@ const DashboardLayout = ({ role }) => {
           transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
       >
-        <AppNavbar toggleSidebar={toggleSidebar} isOpen={isSidebarOpen} />
+        <AppNavbar toggleSidebar={toggleSidebar} isOpen={isSidebarOpen} role={role} />
 
         <main className="p-4 overflow-auto">
           <Outlet />
@@ -86,6 +86,7 @@ function App() {
           <Route path="request-plan" element={<Placeholder />} />
           <Route path="payments" element={<Placeholder />} />
           <Route path="manage-passwords" element={<Placeholder />} />
+          <Route path="profile" element={<AdminProfile />} />
         </Route>
 
         {/* Admin Routes */}
@@ -111,6 +112,7 @@ function App() {
           <Route path="recurring-bookings" element={<Placeholder />} />
           <Route path="payments" element={<Placeholder />} />
           <Route path="bookings" element={<Placeholder />} />
+          <Route path="profile" element={<AdminProfile />} />
         </Route>
 
         {/* Fallback */}

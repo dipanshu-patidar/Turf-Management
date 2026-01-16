@@ -45,13 +45,15 @@
     background: #fff;
     border-radius: 10px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-    overflow: hidden;
+    overflow-x: auto;
     border: 1px solid #f1f3f5;
+    margin-bottom: 1.5rem;
 }
 
 .mu-table {
     margin-bottom: 0;
     width: 100%;
+    min-width: 900px;
 }
 
 .mu-table thead th {
@@ -63,6 +65,7 @@
     letter-spacing: 0.5px;
     padding: 1rem;
     border-bottom: 2px solid #e9ecef;
+    white-space: nowrap;
 }
 
 .mu-table tbody td {
