@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal, Form, Badge } from 'react-bootstrap';
-import { FaChevronLeft, FaChevronRight, FaCalendarAlt, FaPlus, FaTrash, FaEdit } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaCalendarAlt, FaPlus, FaTrash, FaEdit, FaRupeeSign } from 'react-icons/fa';
+import { InputGroup } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import './StaffBooking.css';
 
@@ -79,52 +80,88 @@ const StaffBooking = () => {
 
     const [showNewModal, setShowNewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
-    const [selectedSlot, setSelectedSlot] = useState({ court: '', time: '' });
-    const [selectedBooking, setSelectedBooking] = useState(null);
+    const [selectedSlot, setSelectedSlot] = useState({ court: '', startTime: '', endTime: '', price: 0, hourlyRate: 0 });
     const [bookings, setBookings] = useState(mockBookings);
-
+    const [selectedBooking, setSelectedBooking] = useState(null);
     const [newBookingData, setNewBookingData] = useState({
         customerName: '',
         phone: '',
-        status: 'Fully Paid'
+        advancePaid: 0
     });
+
+    // Mock Pricing Logic (same as Admin)
+    const getPrice = (court, date) => {
+        // Simple mock: Weekday/Weekend logic could be added here
+        const baseRates = {
+            "Football": 1200,
+            "Cricket": 1000,
+            "Badminton - Court 1": 400,
+            "Badminton - Court 2": 400,
+            "Pickleball": 500
+        };
+        return baseRates[court] || 500;
+    };
 
     const handleSlotClick = (court, time) => {
         const isBooked = bookings.find(b => b.court === court && b.startTime === time);
         if (isBooked) return;
 
-        setSelectedSlot({ court, time });
+        // Default 1 hour duration
+        const [h, m] = time.split(':').map(Number);
+        const endM = m + 60;
+        const endH = h + Math.floor(endM / 60);
+        const finalM = endM % 60;
+        const endTime = `${endH.toString().padStart(2, '0')}:${finalM.toString().padStart(2, '0')}`;
+
+        const hourlyRate = getPrice(court, selectedDate);
+
+        setSelectedSlot({ court, startTime: time, endTime, price: hourlyRate, hourlyRate });
+        setNewBookingData({
+            customerName: '',
+            phone: '',
+            advancePaid: 0
+        });
         setShowNewModal(true);
     };
 
-    const handleBookingClick = (e, booking) => {
-        e.stopPropagation();
-        setSelectedBooking(booking);
-        setShowEditModal(true);
+    const handleEndTimeChange = (newEndTime) => {
+        const [startH, startM] = selectedSlot.startTime.split(':').map(Number);
+        const [endH, endM] = newEndTime.split(':').map(Number);
+
+        let totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+        if (totalMinutes < 15) totalMinutes = 15; // Minimum 15 mins
+
+        const price = Math.ceil((selectedSlot.hourlyRate / 60) * totalMinutes);
+        setSelectedSlot(prev => ({ ...prev, endTime: newEndTime, price }));
     };
 
     const handleNewBookingSubmit = (e) => {
         e.preventDefault();
+
+        const advancePaid = parseFloat(newBookingData.advancePaid) || 0;
+        const totalPrice = selectedSlot.price;
+        const balance = totalPrice - advancePaid;
+
+        let status = 'Advance Pending';
+        if (advancePaid >= totalPrice) status = 'Fully Paid';
+        else if (advancePaid > 0) status = 'Balance Pending';
+
         const newBooking = {
             id: Date.now(),
             customerName: newBookingData.customerName,
             court: selectedSlot.court,
-            startTime: selectedSlot.time,
-            endTime: (() => {
-                const [h, m] = selectedSlot.time.split(':').map(Number);
-                const newM = m + 15;
-                const newH = h + Math.floor(newM / 60);
-                const finalM = newM % 60;
-                return `${newH.toString().padStart(2, '0')}:${finalM.toString().padStart(2, '0')}`;
-            })(),
-            status: newBookingData.status,
+            startTime: selectedSlot.startTime,
+            endTime: selectedSlot.endTime,
+            status: status,
             date: selectedDate.toISOString().split('T')[0],
-            phone: newBookingData.phone
+            phone: newBookingData.phone,
+            totalPrice,
+            advancePaid,
+            balance
         };
         setBookings([...bookings, newBooking]);
         toast.success('Booking created successfully');
         setShowNewModal(false);
-        setNewBookingData({ customerName: '', phone: '', status: 'Fully Paid' });
     };
 
     const handleCancelBooking = () => {
@@ -264,21 +301,45 @@ const StaffBooking = () => {
                     ))}
                 </div>
             </div>
-            {/* New Booking Modal */}
-            <Modal show={showNewModal} onHide={() => setShowNewModal(false)} centered>
+            {/* New Booking Modal - Matches Admin Style */}
+            <Modal show={showNewModal} onHide={() => setShowNewModal(false)} centered backdrop="static">
                 <Modal.Header closeButton className="border-0">
-                    <Modal.Title className="fw-bold">New Booking</Modal.Title>
+                    <Modal.Title className="fw-bold">Add New Booking</Modal.Title>
                 </Modal.Header>
                 <Form onSubmit={handleNewBookingSubmit}>
-                    <Modal.Body className="pt-0">
-                        <div className="mb-3">
-                            <Badge bg="light" text="dark" className="border px-3 py-2 w-100 text-start">
-                                <div className="small text-muted mb-1">Court & Time</div>
-                                <div className="fw-bold">{selectedSlot.court} | {selectedSlot.time}</div>
-                            </Badge>
+                    <Modal.Body className="p-4 pt-0">
+                        <div className="row g-3 mb-3">
+                            <div className="col-md-12">
+                                <Form.Label className="small fw-bold">Court</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={selectedSlot.court}
+                                    readOnly
+                                    className="bg-light"
+                                />
+                            </div>
+                            <div className="col-md-6">
+                                <Form.Label className="small fw-bold">Start Time</Form.Label>
+                                <Form.Control
+                                    type="time"
+                                    value={selectedSlot.startTime}
+                                    readOnly
+                                    className="bg-light"
+                                />
+                            </div>
+                            <div className="col-md-6">
+                                <Form.Label className="small fw-bold">End Time</Form.Label>
+                                <Form.Control
+                                    type="time"
+                                    step="900"
+                                    value={selectedSlot.endTime}
+                                    onChange={(e) => handleEndTimeChange(e.target.value)}
+                                />
+                            </div>
                         </div>
+
                         <Form.Group className="mb-3">
-                            <Form.Label className="small fw-bold">Customer Name</Form.Label>
+                            <Form.Label className="small fw-bold">Customer Name <span className="text-danger">*</span></Form.Label>
                             <Form.Control
                                 type="text"
                                 placeholder="Enter customer name"
@@ -287,29 +348,49 @@ const StaffBooking = () => {
                                 onChange={(e) => setNewBookingData({ ...newBookingData, customerName: e.target.value })}
                             />
                         </Form.Group>
+
                         <Form.Group className="mb-3">
-                            <Form.Label className="small fw-bold">Customer Number</Form.Label>
+                            <Form.Label className="small fw-bold">Phone Number <span className="text-danger">*</span></Form.Label>
                             <Form.Control
                                 type="tel"
                                 placeholder="Enter mobile number"
                                 required
+                                pattern="[0-9]{10}"
                                 value={newBookingData.phone}
                                 onChange={(e) => setNewBookingData({ ...newBookingData, phone: e.target.value })}
                             />
                         </Form.Group>
+
+                        <div className="bg-light p-3 rounded mb-3">
+                            <div className="d-flex justify-content-between align-items-center">
+                                <span>Total Price:</span>
+                                <span className="fw-bold fs-5">₹ {selectedSlot.price}</span>
+                            </div>
+                        </div>
+
                         <Form.Group className="mb-3">
-                            <Form.Label className="small fw-bold">Payment Status</Form.Label>
-                            <Form.Select
-                                value={newBookingData.status}
-                                onChange={(e) => setNewBookingData({ ...newBookingData, status: e.target.value })}
-                            >
-                                <option value="Fully Paid">Fully Paid</option>
-                                <option value="Balance Pending">Balance Pending</option>
-                                <option value="Advance Pending">Advance Pending</option>
-                            </Form.Select>
+                            <Form.Label className="small fw-bold">Advance Payment</Form.Label>
+                            <InputGroup>
+                                <InputGroup.Text>₹</InputGroup.Text>
+                                <Form.Control
+                                    type="number"
+                                    placeholder="0"
+                                    min="0"
+                                    max={selectedSlot.price}
+                                    value={newBookingData.advancePaid}
+                                    onChange={(e) => setNewBookingData({ ...newBookingData, advancePaid: e.target.value })}
+                                />
+                            </InputGroup>
                         </Form.Group>
+
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                            <span className="small text-muted">Balance:</span>
+                            <span className="fw-bold text-danger">
+                                ₹ {selectedSlot.price - (parseFloat(newBookingData.advancePaid) || 0)}
+                            </span>
+                        </div>
                     </Modal.Body>
-                    <Modal.Footer className="border-0">
+                    <Modal.Footer className="border-0 bg-light">
                         <Button variant="light" onClick={() => setShowNewModal(false)}>Cancel</Button>
                         <Button variant="primary" type="submit" className="px-4">Create Booking</Button>
                     </Modal.Footer>

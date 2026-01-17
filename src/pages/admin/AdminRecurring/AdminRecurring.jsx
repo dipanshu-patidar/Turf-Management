@@ -155,6 +155,13 @@ const AdminRecurring = () => {
             return;
         }
 
+        // Validate 15-minute interval alignment
+        const [hours, minutes] = formData.fixedTime.split(':').map(Number);
+        if (minutes % 15 !== 0) {
+            toast.error('Start time must be in 15-minute intervals (e.g., 00, 15, 30, 45)');
+            return;
+        }
+
         if (editingBooking) {
             // Edit Logic
             const updatedList = recurringBookings.map(b =>
@@ -410,6 +417,7 @@ const AdminRecurring = () => {
                                 <Form.Control
                                     type="time"
                                     required
+                                    step="900"
                                     value={formData.fixedTime}
                                     onChange={(e) => setFormData({ ...formData, fixedTime: e.target.value })}
                                 />

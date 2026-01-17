@@ -9,11 +9,14 @@ const AdminBooking = () => {
     const courts = ['Football', 'Cricket', 'Badminton - Court 1', 'Badminton - Court 2', 'Pickleball'];
 
     // Time slots (6 AM to 11 PM in 1-hour intervals)
-    const timeSlots = [
-        '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-        '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-        '18:00', '19:00', '20:00', '21:00', '22:00'
-    ];
+    // Time slots (6 AM to 11 PM in 15-minute intervals)
+    const timeSlots = [];
+    for (let h = 6; h < 23; h++) {
+        for (let m = 0; m < 60; m += 15) {
+            const time = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            timeSlots.push(time);
+        }
+    }
 
     // Mock pricing (weekday/weekend)
     const courtPricing = {
@@ -32,7 +35,8 @@ const AdminBooking = () => {
             id: 1,
             court: 'Football',
             date: new Date().toISOString().split('T')[0],
-            timeSlot: '09:00',
+            startTime: '09:00',
+            endTime: '10:00',
             customerName: 'Rahul Sharma',
             phone: '9876543210',
             totalPrice: 1200,
@@ -43,10 +47,11 @@ const AdminBooking = () => {
             id: 2,
             court: 'Cricket',
             date: new Date().toISOString().split('T')[0],
-            timeSlot: '10:00',
+            startTime: '10:00',
+            endTime: '11:30',
             customerName: 'Priya Singh',
             phone: '9123456780',
-            totalPrice: 1000,
+            totalPrice: 1500,
             advancePaid: 500,
             paymentStatus: 'balance'
         }
@@ -116,17 +121,26 @@ const AdminBooking = () => {
 
     // Check if slot is booked
     const getBookingForSlot = (court, timeSlot) => {
-        return bookings.find(b =>
-            b.court === court &&
-            b.timeSlot === timeSlot &&
-            b.date === dateToString(selectedDate)
-        );
+        return bookings.find(b => {
+            if (b.court !== court || b.date !== dateToString(selectedDate)) return false;
+            // Check if timeSlot falls within booking duration (inclusive start, exclusive end)
+            return timeSlot >= b.startTime && timeSlot < b.endTime;
+        });
     };
 
     // Handle empty slot click
     const handleEmptySlotClick = (court, timeSlot) => {
-        const price = getPrice(court, selectedDate);
-        setSelectedSlot({ court, timeSlot, price });
+        // Default 1 hour duration
+        const [h, m] = timeSlot.split(':').map(Number);
+        const endM = m + 60; // Default 1 hour
+        const endH = h + Math.floor(endM / 60);
+        const finalM = endM % 60;
+        const endTime = `${endH.toString().padStart(2, '0')}:${finalM.toString().padStart(2, '0')}`;
+
+        // Calculate initial price (1 hour)
+        const hourlyRate = getPrice(court, selectedDate);
+
+        setSelectedSlot({ court, startTime: timeSlot, endTime, price: hourlyRate, hourlyRate });
         setFormData({ customerName: '', phone: '', advancePaid: 0 });
         setShowAddModal(true);
     };
@@ -146,41 +160,40 @@ const AdminBooking = () => {
     const handleAddBooking = (e) => {
         e.preventDefault();
 
-        // Check for double booking
-        const existing = getBookingForSlot(selectedSlot.court, selectedSlot.timeSlot);
-        if (existing) {
-            toast.error('This slot is already booked!');
-            return;
-        }
-
-        const totalPrice = selectedSlot.price;
-        const advancePaid = parseFloat(formData.advancePaid) || 0;
-        const balance = totalPrice - advancePaid;
-
-        let paymentStatus = 'advance';
-        if (advancePaid >= totalPrice) {
-            paymentStatus = 'paid';
-        } else if (advancePaid > 0) {
-            paymentStatus = 'balance';
-        }
-
         const newBooking = {
             id: Date.now(),
             court: selectedSlot.court,
             date: dateToString(selectedDate),
-            timeSlot: selectedSlot.timeSlot,
+            startTime: selectedSlot.startTime,
+            endTime: selectedSlot.endTime,
             customerName: formData.customerName,
             phone: formData.phone,
-            totalPrice,
-            advancePaid,
-            balance,
-            paymentStatus
+            totalPrice: selectedSlot.price,
+            advancePaid: parseFloat(formData.advancePaid) || 0,
+            balance: selectedSlot.price - (parseFloat(formData.advancePaid) || 0),
+            paymentStatus: (parseFloat(formData.advancePaid) || 0) >= selectedSlot.price ? 'paid' : ((parseFloat(formData.advancePaid) || 0) > 0 ? 'balance' : 'advance')
         };
 
         setBookings([...bookings, newBooking]);
         toast.success('Booking created successfully!');
         setShowAddModal(false);
         setSelectedSlot(null);
+    };
+
+    // Calculate price when endTime changes
+    const handleEndTimeChange = (newEndTime) => {
+        // Calculate duration minutes
+        const [startH, startM] = selectedSlot.startTime.split(':').map(Number);
+        const [endH, endM] = newEndTime.split(':').map(Number);
+        const totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+
+        if (totalMinutes <= 0) {
+            toast.error("End time must be after start time");
+            return;
+        }
+
+        const price = Math.ceil((selectedSlot.hourlyRate / 60) * totalMinutes);
+        setSelectedSlot(prev => ({ ...prev, endTime: newEndTime, price }));
     };
 
     // Update booking
@@ -233,7 +246,7 @@ const AdminBooking = () => {
             >
                 <div>
                     <div className="adminbooking-card-customer">{booking.customerName}</div>
-                    <div className="adminbooking-card-time">{booking.timeSlot} - {getEndTime(booking.timeSlot)}</div>
+                    <div className="adminbooking-card-time">{booking.startTime} - {booking.endTime}</div>
                     <div className="adminbooking-card-phone">📞 {booking.phone}</div>
                 </div>
                 <div>
@@ -248,9 +261,11 @@ const AdminBooking = () => {
     };
 
     const getEndTime = (startTime) => {
-        const [hours, minutes] = startTime.split(':');
-        const endHour = (parseInt(hours) + 1).toString().padStart(2, '0');
-        return `${endHour}:${minutes}`;
+        const [hours, minutes] = startTime.split(':').map(Number);
+        const totalMinutes = hours * 60 + minutes + 15; // Default 15 min duration
+        const endH = Math.floor(totalMinutes / 60);
+        const endM = totalMinutes % 60;
+        return `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
     };
 
     return (
@@ -308,13 +323,17 @@ const AdminBooking = () => {
                             {/* Court Slots */}
                             {courts.map(court => {
                                 const booking = getBookingForSlot(court, timeSlot);
+                                // Only render the card if it's the START of the booking
+                                const isStart = booking && booking.startTime === timeSlot;
+
                                 return (
                                     <div
                                         key={`${court}-${timeSlot}`}
                                         className={`adminbooking-slot-cell ${booking ? 'booked' : 'empty'}`}
                                         onClick={() => !booking && handleEmptySlotClick(court, timeSlot)}
+                                        style={booking && !isStart ? { borderTop: 'none', color: 'transparent' } : {}}
                                     >
-                                        {booking && renderBookingCard(booking)}
+                                        {isStart && renderBookingCard(booking)}
                                     </div>
                                 );
                             })}
@@ -341,7 +360,7 @@ const AdminBooking = () => {
                         </Form.Group>
 
                         <div className="row g-3 mb-3">
-                            <div className="col-md-6">
+                            <div className="col-md-4">
                                 <Form.Label className="adminbooking-form-label">Court</Form.Label>
                                 <Form.Control
                                     type="text"
@@ -350,13 +369,22 @@ const AdminBooking = () => {
                                     readOnly
                                 />
                             </div>
-                            <div className="col-md-6">
-                                <Form.Label className="adminbooking-form-label">Time Slot</Form.Label>
+                            <div className="col-md-4">
+                                <Form.Label className="adminbooking-form-label">Start Time</Form.Label>
                                 <Form.Control
-                                    type="text"
-                                    value={selectedSlot ? `${selectedSlot.timeSlot} - ${getEndTime(selectedSlot.timeSlot)}` : ''}
+                                    type="time"
+                                    value={selectedSlot?.startTime || ''}
                                     className="adminbooking-readonly-field"
                                     readOnly
+                                />
+                            </div>
+                            <div className="col-md-4">
+                                <Form.Label className="adminbooking-form-label">End Time</Form.Label>
+                                <Form.Control
+                                    type="time"
+                                    step="900"
+                                    value={selectedSlot?.endTime || ''}
+                                    onChange={(e) => handleEndTimeChange(e.target.value)}
                                 />
                             </div>
                         </div>
@@ -433,7 +461,7 @@ const AdminBooking = () => {
                             <Form.Label className="adminbooking-form-label">Court & Time</Form.Label>
                             <Form.Control
                                 type="text"
-                                value={editingBooking ? `${editingBooking.court} - ${editingBooking.timeSlot}` : ''}
+                                value={editingBooking ? `${editingBooking.court} (${editingBooking.startTime} - ${editingBooking.endTime})` : ''}
                                 className="adminbooking-readonly-field"
                                 readOnly
                             />
