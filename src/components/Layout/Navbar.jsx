@@ -22,8 +22,6 @@ const AppNavbar = ({ toggleSidebar, isOpen, role }) => {
                     >
                         <FaBars size={18} />
                     </Button>
-
-                    <h5 className="m-0 fw-bold text-dark d-none d-md-block">Dashboard</h5>
                 </div>
 
                 <Nav className="ms-auto align-items-center flex-row gap-3">
