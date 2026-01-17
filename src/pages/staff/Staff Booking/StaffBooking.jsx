@@ -15,10 +15,13 @@ const StaffBooking = () => {
         "Pickleball"
     ];
 
-    const timeSlots = Array.from({ length: 18 }, (_, i) => {
-        const hour = i + 6; // Start from 6 AM
-        return `${hour.toString().padStart(2, '0')}:00`;
-    });
+    const timeSlots = [];
+    for (let h = 6; h < 24; h++) {
+        for (let m = 0; m < 60; m += 15) {
+            const time = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            timeSlots.push(time);
+        }
+    }
 
     // Mock Bookings Data
     const mockBookings = [
@@ -107,7 +110,13 @@ const StaffBooking = () => {
             customerName: newBookingData.customerName,
             court: selectedSlot.court,
             startTime: selectedSlot.time,
-            endTime: `${parseInt(selectedSlot.time) + 1}:00`.padStart(5, '0'),
+            endTime: (() => {
+                const [h, m] = selectedSlot.time.split(':').map(Number);
+                const newM = m + 15;
+                const newH = h + Math.floor(newM / 60);
+                const finalM = newM % 60;
+                return `${newH.toString().padStart(2, '0')}:${finalM.toString().padStart(2, '0')}`;
+            })(),
             status: newBookingData.status,
             date: selectedDate.toISOString().split('T')[0],
             phone: newBookingData.phone

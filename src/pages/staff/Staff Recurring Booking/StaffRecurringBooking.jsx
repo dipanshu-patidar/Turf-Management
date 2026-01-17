@@ -104,6 +104,24 @@ const StaffRecurringBooking = () => {
         e.preventDefault();
         // Validation would go here
 
+        if (formData.startTime && formData.endTime) {
+            const [startHour, startMin] = formData.startTime.split(':').map(Number);
+            const [endHour, endMin] = formData.endTime.split(':').map(Number);
+
+            const startTotalMins = startHour * 60 + startMin;
+            const endTotalMins = endHour * 60 + endMin;
+
+            if (startTotalMins >= endTotalMins) {
+                toast.error('End time must be after Start time');
+                return;
+            }
+
+            if (startTotalMins % 15 !== 0 || endTotalMins % 15 !== 0) {
+                toast.error('Recurrence times must be in 15-minute intervals');
+                return;
+            }
+        }
+
         // Mock Save Logic
         if (isEditMode) {
             // Update logic (mock)
@@ -275,6 +293,7 @@ const StaffRecurringBooking = () => {
                                 <Form.Control
                                     className="staffrecurringbooking-input"
                                     type="time"
+                                    step="900"
                                     name="startTime"
                                     value={formData.startTime}
                                     onChange={handleFormChange}
@@ -285,6 +304,7 @@ const StaffRecurringBooking = () => {
                                 <Form.Control
                                     className="staffrecurringbooking-input"
                                     type="time"
+                                    step="900"
                                     name="endTime"
                                     value={formData.endTime}
                                     onChange={handleFormChange}

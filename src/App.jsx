@@ -11,6 +11,7 @@ import AdminPayment from './pages/admin/AdminPayment/AdminPayment';
 import AdminReports from './pages/admin/AdminReports/AdminReports';
 import AdminSetting from './pages/admin/AdminSetting/AdminSetting';
 import AdminProfile from './pages/admin/AdminProfile/AdminProfile';
+import AdminNewBooking from './pages/admin/AdminNewBooking/AdminNewBooking';
 import StaffDashboard from './pages/staff/Staff Dashboard/StaffDashboard';
 import StaffBooking from './pages/staff/Staff Booking/StaffBooking';
 import StaffNewBooking from './pages/staff/Staff New Booking/StaffNewBooking';
@@ -42,7 +43,7 @@ const DashboardLayout = ({ role }) => {
   }, []);
 
   return (
-    <div className="d-flex bg-light min-vh-100 overflow-hidden">
+    <div className="d-flex bg-light vh-100 overflow-hidden">
       <Sidebar role={role} isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
       <div
@@ -54,7 +55,7 @@ const DashboardLayout = ({ role }) => {
       >
         <AppNavbar toggleSidebar={toggleSidebar} isOpen={isSidebarOpen} role={role} />
 
-        <main className="p-4 overflow-auto">
+        <main className="flex-grow-1 p-4 overflow-auto">
           <Outlet />
         </main>
       </div>
@@ -101,6 +102,7 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="management-users" element={<ManagementUsers />} />
           <Route path="courts-pricing" element={<AdminCourts />} />
+          <Route path="new-booking" element={<AdminNewBooking />} />
           <Route path="booking-calendar" element={<AdminBooking />} />
           <Route path="recurring-bookings" element={<AdminRecurring />} />
           <Route path="payments" element={<AdminPayment />} />

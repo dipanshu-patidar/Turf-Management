@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Form, Button, Card, Badge } from 'react-bootstrap';
-import { FaUser, FaCalendarAlt, FaTableTennis, FaWallet, FaSave, FaTimes } from 'react-icons/fa';
+import { Row, Col, Form, Button, Card, Badge, InputGroup } from 'react-bootstrap';
+import { FaUser, FaCalendarAlt, FaTableTennis, FaWallet, FaSave, FaTimes, FaCheck, FaCalculator } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import './StaffNewBooking.css';
+import './AdminNewBooking.css';
 
-const StaffNewBooking = () => {
+const AdminNewBooking = () => {
     const navigate = useNavigate();
     const today = new Date().toISOString().split('T')[0];
 
@@ -19,16 +19,21 @@ const StaffNewBooking = () => {
         sport: 'Football',
         court: 'Main Turf',
         advancePaid: 0,
-        paymentMode: 'Cash'
+        paymentMode: 'Cash',
+        notes: ''
     });
 
     // Pricing Logic State
     const [pricing, setPricing] = useState({
         dayType: 'Weekday',
         totalPrice: 1200,
+        finalAmount: 1200, // Amount after discount/override
         remainingBalance: 1200,
-        duration: 1,
-        hourlyRate: 1200
+        duration: '1h 0m',
+        hourlyRate: 1200,
+        totalMinutes: 60,
+        discount: 0,
+        isPriceOverridden: false
     });
 
     // Mock Pricing Configuration
@@ -46,12 +51,11 @@ const StaffNewBooking = () => {
         'Pickleball': ['Pickleball Court']
     };
 
-    // Calculate Day Type and Price
     // Calculate Day Type, Duration, and Price
     useEffect(() => {
         const dateObj = new Date(formData.date);
         const day = dateObj.getDay();
-        const isWeekend = (day === 0 || day === 6); // 0 is Sunday, 6 is Saturday
+        const isWeekend = (day === 0 || day === 6);
         const dayType = isWeekend ? 'Weekend' : 'Weekday';
 
         const hourlyRate = pricingConfig[formData.sport]?.[dayType] || 0;
@@ -73,24 +77,33 @@ const StaffNewBooking = () => {
             }
         }
 
-        // Pricing: (HourlyRate / 60) * TotalMinutes
-        const totalPrice = Math.ceil((hourlyRate / 60) * totalMinutes);
+        // Auto-Calculate Price if NOT overridden
+        let calculatedPrice = pricing.totalPrice;
+        if (!pricing.isPriceOverridden) {
+            calculatedPrice = Math.ceil((hourlyRate / 60) * totalMinutes);
+        }
 
-        // Format Duration String (e.g., "1h 15m")
+        // Apply Discount
+        const discountAmount = Number(pricing.discount) || 0;
+        const finalPayable = Math.max(0, calculatedPrice - discountAmount);
+
+        // Format Duration
         const hours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
         const durationString = minutes > 0 ? `${hours}h ${minutes}m` : `${hours} Hours`;
 
         setPricing(prev => ({
             ...prev,
-            dayType: dayType,
-            totalPrice: totalPrice,
-            remainingBalance: totalPrice - formData.advancePaid,
+            dayType,
+            totalPrice: calculatedPrice,
+            finalAmount: finalPayable,
+            remainingBalance: finalPayable - formData.advancePaid,
             duration: durationString,
-            totalMinutes: totalMinutes,
-            hourlyRate: hourlyRate
+            totalMinutes,
+            hourlyRate: !prev.isPriceOverridden ? hourlyRate : prev.hourlyRate
         }));
-    }, [formData.date, formData.sport, formData.advancePaid, formData.startTime, formData.endTime]);
+
+    }, [formData.date, formData.sport, formData.startTime, formData.endTime, pricing.discount, pricing.isPriceOverridden, formData.advancePaid]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -99,7 +112,6 @@ const StaffNewBooking = () => {
             [name]: value
         }));
 
-        // Reset court if sport changes
         if (name === 'sport') {
             setFormData(prev => ({
                 ...prev,
@@ -108,28 +120,48 @@ const StaffNewBooking = () => {
         }
     };
 
+    const handlePriceChange = (e) => {
+        const newPrice = Number(e.target.value);
+        setPricing(prev => ({
+            ...prev,
+            totalPrice: newPrice,
+            isPriceOverridden: true
+        }));
+    };
+
+    const handleDiscountChange = (e) => {
+        const discount = Number(e.target.value);
+        setPricing(prev => ({
+            ...prev,
+            discount: discount
+        }));
+    };
+
+    const resetPrice = () => {
+        setPricing(prev => ({
+            ...prev,
+            isPriceOverridden: false,
+            discount: 0
+        }));
+        toast.success('Price reset to auto-calculation');
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Basic Validation
+        // Validation
         if (!formData.customerName || !formData.phoneNumber) {
-            toast.error('Please fill in all required fields');
+            toast.error('Customer details are required');
             return;
         }
 
-        if (formData.advancePaid > pricing.totalPrice) {
-            toast.error('Advance cannot be greater than Total Price');
-            return;
-        }
-
-        if (formData.phoneNumber.length < 10) {
-            toast.error('Please enter a valid phone number');
+        if (formData.advancePaid > pricing.finalAmount) {
+            toast.error('Advance cannot be greater than Final Amount');
             return;
         }
 
         const [startHour, startMin] = formData.startTime.split(':').map(Number);
         const [endHour, endMin] = formData.endTime.split(':').map(Number);
-
         const startTotalMins = startHour * 60 + startMin;
         const endTotalMins = endHour * 60 + endMin;
 
@@ -143,51 +175,49 @@ const StaffNewBooking = () => {
             return;
         }
 
-        // Mock Save
-        console.log('Saving Booking:', { ...formData, ...pricing });
+        console.log('Admin Booking Saved:', { ...formData, ...pricing });
         toast.success('Booking saved successfully!');
 
-        // Redirect to calendar or dashboard
         setTimeout(() => {
-            navigate('/management/booking-calendar');
+            navigate('/admin/booking-calendar');
         }, 1500);
     };
 
     return (
-        <div className="newbooking-container">
-            <div className="newbooking-page-header">
-                <h2 className="newbooking-title">Create New Booking</h2>
-                <p className="text-muted m-0">Fill in details to reserve a slot</p>
+        <div className="adminnewbooking-container">
+            <div className="adminnewbooking-page-header">
+                <div>
+                    <h2 className="adminnewbooking-title">New Booking (Admin)</h2>
+                    <p className="text-muted m-0">Full control booking creation</p>
+                </div>
             </div>
 
-            <div className="newbooking-card">
+            <div className="adminnewbooking-card">
                 <Form onSubmit={handleSubmit}>
                     <Row className="g-4">
-                        {/* Section 1: Customer Details */}
+                        {/* Customer Details */}
                         <Col lg={6}>
-                            <h5 className="newbooking-section-title">
+                            <h5 className="adminnewbooking-section-title">
                                 <FaUser /> Customer Details
                             </h5>
                             <Row>
                                 <Col md={6} className="mb-3">
-                                    <Form.Label className="newbooking-form-label">Customer Name *</Form.Label>
+                                    <Form.Label className="adminnewbooking-form-label">Customer Name *</Form.Label>
                                     <Form.Control
-                                        className="newbooking-input"
+                                        className="adminnewbooking-input"
                                         type="text"
                                         name="customerName"
-                                        placeholder="Enter customer name"
                                         value={formData.customerName}
                                         onChange={handleChange}
                                         required
                                     />
                                 </Col>
                                 <Col md={6} className="mb-3">
-                                    <Form.Label className="newbooking-form-label">Phone Number *</Form.Label>
+                                    <Form.Label className="adminnewbooking-form-label">Phone Number *</Form.Label>
                                     <Form.Control
-                                        className="newbooking-input"
+                                        className="adminnewbooking-input"
                                         type="tel"
                                         name="phoneNumber"
-                                        placeholder="Enter 10-digit number"
                                         value={formData.phoneNumber}
                                         onChange={handleChange}
                                         required
@@ -196,27 +226,26 @@ const StaffNewBooking = () => {
                             </Row>
                         </Col>
 
-                        {/* Section 2: Booking Details */}
+                        {/* Booking Details */}
                         <Col lg={6}>
-                            <h5 className="newbooking-section-title">
+                            <h5 className="adminnewbooking-section-title">
                                 <FaCalendarAlt /> Slot Selection
                             </h5>
                             <Row>
                                 <Col md={6} className="mb-3">
-                                    <Form.Label className="newbooking-form-label">Date</Form.Label>
+                                    <Form.Label className="adminnewbooking-form-label">Date</Form.Label>
                                     <Form.Control
-                                        className="newbooking-input"
+                                        className="adminnewbooking-input"
                                         type="date"
                                         name="date"
-                                        min={today}
                                         value={formData.date}
                                         onChange={handleChange}
                                     />
                                 </Col>
                                 <Col md={3} className="mb-3">
-                                    <Form.Label className="newbooking-form-label">Start Time</Form.Label>
+                                    <Form.Label className="adminnewbooking-form-label">Start Time</Form.Label>
                                     <Form.Control
-                                        className="newbooking-input"
+                                        className="adminnewbooking-input"
                                         type="time"
                                         step="900"
                                         name="startTime"
@@ -225,9 +254,9 @@ const StaffNewBooking = () => {
                                     />
                                 </Col>
                                 <Col md={3} className="mb-3">
-                                    <Form.Label className="newbooking-form-label">End Time</Form.Label>
+                                    <Form.Label className="adminnewbooking-form-label">End Time</Form.Label>
                                     <Form.Control
-                                        className="newbooking-input"
+                                        className="adminnewbooking-input"
                                         type="time"
                                         step="900"
                                         name="endTime"
@@ -236,9 +265,9 @@ const StaffNewBooking = () => {
                                     />
                                 </Col>
                                 <Col md={6} className="mb-3">
-                                    <Form.Label className="newbooking-form-label">Sport</Form.Label>
+                                    <Form.Label className="adminnewbooking-form-label">Sport</Form.Label>
                                     <Form.Select
-                                        className="newbooking-input"
+                                        className="adminnewbooking-input"
                                         name="sport"
                                         value={formData.sport}
                                         onChange={handleChange}
@@ -250,9 +279,9 @@ const StaffNewBooking = () => {
                                     </Form.Select>
                                 </Col>
                                 <Col md={6} className="mb-3">
-                                    <Form.Label className="newbooking-form-label">Court</Form.Label>
+                                    <Form.Label className="adminnewbooking-form-label">Court</Form.Label>
                                     <Form.Select
-                                        className="newbooking-input"
+                                        className="adminnewbooking-input"
                                         name="court"
                                         value={formData.court}
                                         onChange={handleChange}
@@ -268,87 +297,115 @@ const StaffNewBooking = () => {
 
                         <Col lg={12}><hr className="my-2" /></Col>
 
-                        {/* Section 3 & 4: Pricing and Payment */}
+                        {/* Admin Pricing Section */}
                         <Col lg={5}>
-                            <h5 className="newbooking-section-title">
-                                <FaTableTennis /> Pricing Info
+                            <h5 className="adminnewbooking-section-title">
+                                <FaTableTennis /> Pricing & Overrides
                             </h5>
-                            <div className="newbooking-pricing-box">
-                                <div className="d-flex justify-content-between mb-2">
+                            <div className="adminnewbooking-pricing-box">
+                                <div className="d-flex justify-content-between mb-3">
                                     <span className="text-muted">Day Type:</span>
-                                    <Badge bg={pricing.dayType === 'Weekend' ? 'danger' : 'primary'}>
-                                        {pricing.dayType}
-                                    </Badge>
+                                    <Badge bg={pricing.dayType === 'Weekend' ? 'danger' : 'primary'}>{pricing.dayType}</Badge>
                                 </div>
-                                <div className="d-flex justify-content-between mb-2 align-items-center">
-                                    <span className="text-muted">Rate Per Hour:</span>
-                                    <span className="fw-bold">₹{pricing.hourlyRate}</span>
+                                <div className="mb-3">
+                                    <Form.Label className="small text-muted">Total Price (Editable)</Form.Label>
+                                    <InputGroup>
+                                        <InputGroup.Text>₹</InputGroup.Text>
+                                        <Form.Control
+                                            type="number"
+                                            className={`fw-bold ${pricing.isPriceOverridden ? 'text-warning' : ''}`}
+                                            value={pricing.totalPrice}
+                                            onChange={handlePriceChange}
+                                        />
+                                        {pricing.isPriceOverridden && (
+                                            <Button variant="outline-secondary" onClick={resetPrice} title="Reset to Auto">
+                                                <FaCalculator />
+                                            </Button>
+                                        )}
+                                    </InputGroup>
                                 </div>
-                                <div className="d-flex justify-content-between mb-2 align-items-center">
-                                    <span className="text-muted">Duration:</span>
-                                    <span className="fw-bold">{pricing.duration}</span>
+                                <div className="mb-3">
+                                    <Form.Label className="small text-muted">Discount (₹)</Form.Label>
+                                    <InputGroup>
+                                        <InputGroup.Text>-</InputGroup.Text>
+                                        <Form.Control
+                                            type="number"
+                                            value={pricing.discount}
+                                            onChange={handleDiscountChange}
+                                            placeholder="0"
+                                        />
+                                    </InputGroup>
                                 </div>
                                 <hr />
                                 <div className="d-flex justify-content-between align-items-center">
-                                    <span className="h6 mb-0">Total Amount:</span>
-                                    <span className="newbooking-total-display">₹{pricing.totalPrice}</span>
+                                    <span className="h6 mb-0">Final Payable:</span>
+                                    <span className="adminnewbooking-total-display text-primary">₹{pricing.finalAmount}</span>
                                 </div>
                             </div>
                         </Col>
 
+                        {/* Payment Entry */}
                         <Col lg={7}>
-                            <h5 className="newbooking-section-title">
+                            <h5 className="adminnewbooking-section-title">
                                 <FaWallet /> Payment Entry
                             </h5>
                             <Row>
                                 <Col md={6} className="mb-3">
-                                    <Form.Label className="newbooking-form-label">Advance Paid (₹)</Form.Label>
+                                    <Form.Label className="adminnewbooking-form-label">Advance Paid (₹)</Form.Label>
                                     <Form.Control
-                                        className="newbooking-input"
+                                        className="adminnewbooking-input"
                                         type="number"
                                         name="advancePaid"
-                                        placeholder="Enter amount"
                                         value={formData.advancePaid}
                                         onChange={handleChange}
                                     />
                                 </Col>
                                 <Col md={6} className="mb-3">
-                                    <Form.Label className="newbooking-form-label">Remaining Balance (₹)</Form.Label>
+                                    <Form.Label className="adminnewbooking-form-label">Remaining Balance (₹)</Form.Label>
                                     <Form.Control
-                                        className="newbooking-input"
+                                        className="adminnewbooking-input bg-light"
                                         type="text"
                                         readOnly
                                         value={`₹${pricing.remainingBalance}`}
                                     />
-                                    <Form.Text className="text-danger small">
-                                        * To be collected at turf
-                                    </Form.Text>
                                 </Col>
                                 <Col md={12} className="mb-3">
-                                    <Form.Label className="newbooking-form-label">Payment Mode</Form.Label>
+                                    <Form.Label className="adminnewbooking-form-label">Payment Mode</Form.Label>
                                     <div className="d-flex gap-2">
-                                        {['Cash', 'UPI', 'Card'].map(mode => (
+                                        {['Cash', 'UPI', 'Card', 'Online'].map(mode => (
                                             <Button
                                                 key={mode}
-                                                variant={formData.paymentMode === mode ? 'danger' : 'outline-secondary'}
+                                                variant={formData.paymentMode === mode ? 'dark' : 'outline-secondary'}
                                                 onClick={() => setFormData(prev => ({ ...prev, paymentMode: mode }))}
-                                                className="flex-grow-1 py-3 fw-bold"
+                                                className="flex-grow-1"
                                             >
                                                 {mode}
                                             </Button>
                                         ))}
                                     </div>
                                 </Col>
+                                <Col md={12}>
+                                    <Form.Label className="adminnewbooking-form-label">Notes</Form.Label>
+                                    <Form.Control
+                                        className="adminnewbooking-input"
+                                        as="textarea"
+                                        rows={2}
+                                        placeholder="Admin notes (optional)"
+                                        name="notes"
+                                        value={formData.notes}
+                                        onChange={handleChange}
+                                    />
+                                </Col>
                             </Row>
                         </Col>
                     </Row>
 
-                    <div className="newbooking-actions">
-                        <Button variant="danger" type="submit" className="newbooking-btn-save">
-                            <FaSave className="me-2" /> Save Booking
-                        </Button>
-                        <Button variant="outline-secondary" className="newbooking-btn-cancel" onClick={() => navigate('/management/booking-calendar')}>
+                    <div className="adminnewbooking-actions">
+                        <Button variant="outline-secondary" onClick={() => navigate('/admin/booking-calendar')}>
                             <FaTimes className="me-2" /> Cancel
+                        </Button>
+                        <Button variant="success" type="submit" className="adminnewbooking-btn-save">
+                            <FaSave className="me-2" /> Save Booking
                         </Button>
                     </div>
                 </Form>
@@ -357,4 +414,4 @@ const StaffNewBooking = () => {
     );
 };
 
-export default StaffNewBooking;
+export default AdminNewBooking;

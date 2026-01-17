@@ -22,6 +22,7 @@ const Sidebar = ({ role, isOpen, toggleSidebar }) => {
             { label: 'Dashboard', path: '/admin/dashboard', icon: <FaTachometerAlt /> },
             { label: 'Management Users', path: '/admin/management-users', icon: <FaUsers /> },
             { label: 'Courts & Pricing', path: '/admin/courts-pricing', icon: <FaMoneyBillWave /> },
+            { label: 'New Booking', path: '/admin/new-booking', icon: <FaPlusCircle /> },
             { label: 'Booking Calendar', path: '/admin/booking-calendar', icon: <FaCalendarAlt /> },
             { label: 'Recurring Bookings', path: '/admin/recurring-bookings', icon: <FaClock /> },
             { label: 'Payments', path: '/admin/payments', icon: <FaMoneyBillWave /> },
@@ -32,7 +33,7 @@ const Sidebar = ({ role, isOpen, toggleSidebar }) => {
             { label: 'Dashboard', path: '/management/dashboard', icon: <FaTachometerAlt /> },
             { label: 'Booking Calendar', path: '/management/booking-calendar', icon: <FaCalendarAlt /> },
             { label: 'New Booking', path: '/management/new-booking', icon: <FaPlusCircle /> },
-                        { label: 'Bookings', path: '/management/bookings', icon: <FaListAlt /> },
+            { label: 'Bookings', path: '/management/bookings', icon: <FaListAlt /> },
             { label: 'Recurring Bookings', path: '/management/recurring-bookings', icon: <FaClock /> },
             { label: 'Payments', path: '/management/payments', icon: <FaMoneyBillWave /> },
         ]

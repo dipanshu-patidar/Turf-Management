@@ -26,8 +26,8 @@ const StaffCheckBooking = () => {
             phone: "9876543210",
             court: "Football - Main Turf",
             date: "2024-03-20",
-            time: "18:00 - 19:00",
-            amount: 1500,
+            time: "18:15 - 19:45",
+            amount: 1800,
             status: "Pending" // Paid, Pending, Advance Pending
         },
         {
@@ -36,8 +36,8 @@ const StaffCheckBooking = () => {
             phone: "9123456780",
             court: "Cricket - Net 1",
             date: "2024-03-20",
-            time: "16:00 - 17:00",
-            amount: 1200,
+            time: "16:00 - 16:45",
+            amount: 900,
             status: "Paid"
         },
         {
