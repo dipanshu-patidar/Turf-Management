@@ -40,10 +40,10 @@ const StaffNewBooking = () => {
     };
 
     const courtsBySport = {
-        'Football': ['Main Turf', 'Side Turf'],
-        'Cricket': ['Net 1', 'Net 2', 'Main Pitch'],
+        'Football': ['Grass Court', 'Main Court'],
+        'Cricket': ['Grass Court', 'Main Court'],
         'Badminton': ['Court 1', 'Court 2'],
-        'Pickleball': ['Court A', 'Court B']
+        'Pickleball': ['Pickleball Court']
     };
 
     // Calculate Day Type and Price
@@ -232,6 +232,7 @@ const StaffNewBooking = () => {
                                         name="court"
                                         value={formData.court}
                                         onChange={handleChange}
+                                        disabled={formData.sport === 'Pickleball'}
                                     >
                                         {courtsBySport[formData.sport].map(ct => (
                                             <option key={ct} value={ct}>{ct}</option>

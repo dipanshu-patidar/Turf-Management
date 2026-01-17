@@ -55,7 +55,7 @@ const Sidebar = ({ role, isOpen, toggleSidebar }) => {
             </div>
 
             <div className="flex-grow-1 overflow-auto p-3 custom-scrollbar">
-                {isOpen && <small className="text-muted fw-bold text-uppercase px-3 mb-2 d-block text-nowrap" style={{ fontSize: '0.7rem', letterSpacing: '1px' }}>Menu</small>}
+                {/* {isOpen && <small className="text-muted fw-bold text-uppercase px-3 mb-2 d-block text-nowrap" style={{ fontSize: '0.7rem', letterSpacing: '1px' }}>Menu</small>} */}
                 <Nav className="flex-column w-100">
                     {currentMenu.map((item, index) => (
                         <Nav.Item key={index} className="mb-1">
